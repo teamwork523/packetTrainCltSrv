@@ -75,62 +75,75 @@ public class tcpSender {
     
     // send TCP packet train
     public void runSocket() {
-    	try {
-		    // BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-		    	
-		    // create payload for the packet train
-	    	StringBuilder payload = new StringBuilder();
-	    		
-	    	// Create a zero string
-	    	for (int i = 0; i < constant.pktSize; i++) {
-	    		payload.append('0');
-	    	}
-	    		
-	    	// assign special characters
-	    	payload.setCharAt(0, 's');
-	    	payload.setCharAt(payload.length()-1, 'e');
-	    		
-		    String payloadContent = payload.toString();
-				
-		    // create a counter for packet train
-	    	int counter = 1;
-	    	long beforeTime = 0;
-	    	long afterTime = 0;
-	    	double diffTime = 0;
+	    // BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 	    	
-			while (counter <= constant.pktTrainLength) {
-				// record the time before transmission
+	    // create payload for the packet train
+    	StringBuilder payload = new StringBuilder();
+    		
+    	// Create a zero string
+    	for (int i = 0; i < constant.pktSize; i++) {
+    		payload.append('0');
+    	}
+    		
+    	// assign special characters
+    	payload.setCharAt(0, 's');
+    	payload.setCharAt(payload.length()-1, 'e');
+			
+	    // create a counter for packet train
+    	int counter = 1;
+    	//long beforeTime = 0;
+    	//long afterTime = 0;
+    	double diffTime = 0;
+    	
+		while (counter <= constant.pktTrainLength) {
+			// record the time before transmission
+			/*
+			if (beforeTime == 0) {
 				beforeTime = System.nanoTime();
-				
-				// send packet with constant gap
-				out.println(payload);
-				out.flush();
-				
-				// create train gap in nanoseconds
+				beforeTime = System.currentTimeMillis();
+			}*/
+			
+			// send packet with constant gap
+			out.println(payload);
+			out.flush();
+			
+			// create train gap in nanoseconds
+			/*try {
 				Thread.sleep(constant.pktGapMS);
-				//LockSupport.parkNanos(constant.pktGapNS);
-				
-				// record transmission time after
-				afterTime = System.nanoTime();
-				diffTime = (afterTime - beforeTime)/1000000.0;
-				
-				// display the payload
-				System.out.println("Pkt " + (counter++) + " send with size " + payloadContent.length() + " Bytes.");
-				System.out.println("Takes " + diffTime + " ms.");
-			}
-	
-			String feedback;
-			
-			// print feedback from the server side
-			try {
-				while ((feedback = in.readLine()) != null) {
-					System.out.println(feedback);
-				}
-			} catch (IOException e) {
+			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}
+			}*/
+			LockSupport.parkNanos(constant.pktGapNS);
+						
+			// display the payload
+			System.out.println("Pkt " + (counter++) + " send with size " + payload.length() + " Bytes.");
 			
-    	} catch (InterruptedException e) {
+		}
+		
+		String lastMSG;
+		
+		// record transmission time after
+		//afterTime = System.nanoTime();
+		//afterTime = System.currentTimeMillis();
+		diffTime = constant.pktTrainLength*constant.pktGapNS/java.lang.Math.pow(10.0, 6.0);
+		// diffTime = constant.pktTrainLength*constant.pktGapMS;
+		lastMSG = "END:" + diffTime;
+		// send the last message
+		out.println(lastMSG);
+		out.flush();
+		
+		double test = Double.parseDouble(lastMSG.substring(4));
+		
+		System.out.println("Client side takes " + test + " ms.");
+		
+		String feedback;
+		
+		// print feedback from the server side
+		try {
+			while ((feedback = in.readLine()) != null) {
+				System.out.println(feedback);
+			}
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
     }

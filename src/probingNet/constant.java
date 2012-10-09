@@ -21,17 +21,18 @@ public class constant {
 	public static final int udpPortNumber = 10009;
 	
 	// timeout for TCP connections (in ms)
-	public static final int tcpTimeOut = 20000;
+	public static final int tcpTimeOut = 100000;
 	
 	// the number of package on the train
-	public static final int pktTrainLength = 100;
+	public static final int pktTrainLength = 500;
 	
-	// the size of each packet on the train (in byte)
-	public static final int pktSize = 5000;
+	// the size of each packet on the train (in Byte)
+	public static final int pktSize = 100*1024;
 	
 	// the gap of the size (in ms = 10^(-3)s)
 	public static final long pktGapMS = 1;
 	
 	// the gap of the size (in ns = 10^(-9)s)
-	public static final long pktGapNS = (long)(2*java.lang.Math.pow(10.0, 6.0));
+	public static final double msParameter = 0.02;
+	public static final long pktGapNS = (long)(msParameter*java.lang.Math.pow(10.0, 6.0));
 }
