@@ -18,9 +18,29 @@ import java.util.concurrent.locks.LockSupport;
 
 public class tcpSender {
 	// define all the variables
-	private static Socket pkgTrainSocket = null;
-	private static PrintWriter out = null;
-	private static BufferedReader in = null;
+	private Socket pkgTrainSocket = null;
+	private PrintWriter out = null;
+	private BufferedReader in = null;
+	private long myGapSize = 0;
+	private int myPktSize = 0;
+	private int myTrainLength = 0;
+	
+	// class constructor
+	tcpSender(double gap, int pkt, int train) {
+		if (gap != 0)
+			// convert from ms to ns
+			myGapSize = (long) (gap*java.lang.Math.pow(10.0, 6.0));
+		else
+			myGapSize = constant.pktGapNS;
+		if (pkt != 0)
+			myPktSize = pkt;
+		else
+			myPktSize = constant.pktSize;
+		if (train != 0)
+			myTrainLength = train;
+		else
+			myTrainLength = constant.pktTrainLength;
+	}
 	
 	// set up all the package parameters
     public void openSocket() {
@@ -41,11 +61,11 @@ public class tcpSender {
             
             /*
             // set TCP sending buffer size
-            pkgTrainSocket.setSendBufferSize(constant.pktSize/10);
+            pkgTrainSocket.setSendBufferSize(myPktSize/10);
             System.out.println("Current send buffer size is " + pkgTrainSocket.getSendBufferSize());
             
             // set TCP receiving buffer size
-            pkgTrainSocket.setReceiveBufferSize(constant.pktSize/10);
+            pkgTrainSocket.setReceiveBufferSize(myPktSize/10);
             System.out.println("Current send buffer size is " + pkgTrainSocket.getReceiveBufferSize());*/
             
         } catch (UnknownHostException e) {
@@ -53,7 +73,7 @@ public class tcpSender {
             System.exit(1);
         } catch (IOException e) {
             System.err.println("Couldn't get I/O for "
-                               + "the connection to: taranis.");
+                               + "the connection to: " + constant.hostName );
             System.exit(1);
         }
     	
@@ -75,13 +95,34 @@ public class tcpSender {
     
     // send TCP packet train
     public void runSocket() {
-	    // BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+    	try {
+    		 System.out.println("*****************************************************************");
+		     System.out.println("************************ Uplink BW Test *************************");
+		     System.out.println("*****************************************************************");
+		     
+	    	// upload link bandwidth test
+	    	runUpLinkTask();
 	    	
+	    	 System.out.println("*****************************************************************");
+		     System.out.println("********************** Downlink BW Test *************************");
+		     System.out.println("*****************************************************************");
+	    	
+	    	// download link bandwidth test
+	    	runDownLinkTask();
+    	} catch (NumberFormatException n) {
+    		n.printStackTrace();
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    	}
+    }
+
+    // upload link test
+    private void runUpLinkTask() {
 	    // create payload for the packet train
     	StringBuilder payload = new StringBuilder();
     		
     	// Create a zero string
-    	for (int i = 0; i < constant.pktSize; i++) {
+    	for (int i = 0; i < myPktSize; i++) {
     		payload.append('0');
     	}
     		
@@ -90,18 +131,17 @@ public class tcpSender {
     	payload.setCharAt(payload.length()-1, 'e');
 			
 	    // create a counter for packet train
-    	int counter = 1;
-    	//long beforeTime = 0;
-    	//long afterTime = 0;
+    	int counter = 0;
+    	long beforeTime = 0;
+    	long afterTime = 0;
     	double diffTime = 0;
     	
-		while (counter <= constant.pktTrainLength) {
-			// record the time before transmission
-			/*
+		while (counter < myTrainLength) {
+			// start recording the first packet send time
 			if (beforeTime == 0) {
 				beforeTime = System.nanoTime();
-				beforeTime = System.currentTimeMillis();
-			}*/
+				//beforeTime = System.currentTimeMillis();
+			}
 			
 			// send packet with constant gap
 			out.println(payload);
@@ -113,20 +153,23 @@ public class tcpSender {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}*/
-			LockSupport.parkNanos(constant.pktGapNS);
-						
-			// display the payload
-			System.out.println("Pkt " + (counter++) + " send with size " + payload.length() + " Bytes.");
-			
+			LockSupport.parkNanos(myGapSize);		
+			counter++;
 		}
 		
-		String lastMSG;
-		
-		// record transmission time after
-		//afterTime = System.nanoTime();
+		// record finish transmission time
+		afterTime = System.nanoTime();
 		//afterTime = System.currentTimeMillis();
-		diffTime = constant.pktTrainLength*constant.pktGapNS/java.lang.Math.pow(10.0, 6.0);
-		// diffTime = constant.pktTrainLength*constant.pktGapMS;
+				
+		System.out.println("Single Packet size is " + payload.length() + " Bytes.");
+		System.out.println("Single GAP is " + myGapSize/java.lang.Math.pow(10.0, 6.0) + " ms.");
+		System.out.println("Total number of packet is " + counter);
+		
+		String lastMSG;
+		// Total GAP calculation
+		diffTime = (afterTime - beforeTime)/java.lang.Math.pow(10.0, 6.0);
+		// diffTime = myTrainLength*myGapSize/java.lang.Math.pow(10.0, 6.0);
+		// diffTime = myTrainLength*constant.pktGapMS;
 		lastMSG = "END:" + diffTime;
 		// send the last message
 		out.println(lastMSG);
@@ -135,17 +178,67 @@ public class tcpSender {
 		double test = Double.parseDouble(lastMSG.substring(4));
 		
 		System.out.println("Client side takes " + test + " ms.");
-		
-		String feedback;
-		
-		// print feedback from the server side
-		try {
-			while ((feedback = in.readLine()) != null) {
-				System.out.println(feedback);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
     }
+    
+    // download link test
+    private void runDownLinkTask() throws NumberFormatException, IOException {
+    	String inputLine = "";
+        int counter = 0;
+        int singlePktSize = 0;
+        
+        // timer to record packet arrived
+        // long startTime = System.endTimeMillis();
+        long startTime = 0;
+        long endTime = 0;
+        // the gap time
+        double gapTimeSrv = 0.0;
+        double gapTimeClt = 0.0;
+        double byteCounter = 0.0;
+        double estTotalDownBandWidth = 0.0;
+        double estAvailiableDownBandWidth = 0.0;
+        double availableBWFraction = 1.0;
+        
+        // output from what received
+        while ((inputLine = in.readLine()) != null) {
+        	// check if the start time recorded for first received packet
+        	if (startTime == 0) {
+        		//startTime = System.currentTimeMillis();
+        		startTime = System.nanoTime();
+        		singlePktSize = inputLine.length();
+        	}
 
+        	// out.flush();
+        	byteCounter += inputLine.length();
+        	
+        	// check for last message
+        	if (inputLine.substring(0, 3).equals("END")) {
+        		System.out.println("Detect last download link message");
+        		gapTimeSrv = Double.parseDouble(inputLine.substring(4));
+        		break;
+        	}
+        	
+        	// increase the counter
+        	counter++;
+        }
+        
+        
+        //endTime = System.currentTimeMillis();
+        endTime = System.nanoTime();
+        gapTimeClt = (endTime - startTime)/java.lang.Math.pow(10.0, 6.0);
+        
+        // Bandwidth calculation
+        // 1 Mbit/s = 125 Byte/ms 
+        estTotalDownBandWidth = byteCounter/gapTimeClt/125.0;
+        availableBWFraction = gapTimeSrv/gapTimeClt;
+        estAvailiableDownBandWidth = estTotalDownBandWidth * availableBWFraction;
+        
+        // Display information at the server side
+        System.out.println("Receive single Pkt size is " + singlePktSize + " Bytes.");
+        System.out.println("Total receiving " + counter + " packets.");
+        System.out.println("Server gap time is " + gapTimeSrv + " ms.");
+        System.out.println("Total package received " + byteCounter + " Bytes with " + gapTimeClt + " ms total GAP.");
+        System.out.println("Estimated Total download bandwidth is " + estTotalDownBandWidth + " Mbits/sec.");
+        System.out.println("Availabe fraction is " + availableBWFraction);
+        System.out.println("Estimated Available download bandwidth is " + estAvailiableDownBandWidth + " Mbits/sec.");
+    }
 }

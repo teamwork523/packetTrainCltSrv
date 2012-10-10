@@ -24,15 +24,15 @@ public class constant {
 	public static final int tcpTimeOut = 100000;
 	
 	// the number of package on the train
-	public static final int pktTrainLength = 500;
+	public static final int pktTrainLength = 50;
 	
 	// the size of each packet on the train (in Byte)
-	public static final int pktSize = 100*1024;
+	public static final int pktSize = 50*1024;
 	
 	// the gap of the size (in ms = 10^(-3)s)
 	public static final long pktGapMS = 1;
 	
 	// the gap of the size (in ns = 10^(-9)s)
-	public static final double msParameter = 0.02;
+	public static final double msParameter = 0.5;
 	public static final long pktGapNS = (long)(msParameter*java.lang.Math.pow(10.0, 6.0));
 }

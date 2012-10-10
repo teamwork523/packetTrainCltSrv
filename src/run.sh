@@ -4,4 +4,4 @@
 rm probingNet/*.class 2> /dev/null
 
 javac probingNet/main.java
-java probingNet.packageTrain
+java probingNet.packageTrain $@
