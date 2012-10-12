@@ -35,4 +35,9 @@ public class constant {
 	// the gap of the size (in ns = 10^(-9)s)
 	public static final double msParameter = 0.5;
 	public static final long pktGapNS = (long)(msParameter*java.lang.Math.pow(10.0, 6.0));
+	
+	// special tag for message
+	public static final String finalMSG = "END";
+	public static final String ackMSG = "ACK";
+	public static final String resultMSG = "RT";
 }

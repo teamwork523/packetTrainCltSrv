@@ -154,9 +154,9 @@ public class tcpThread extends Thread {
         	byteCounter += inputLine.length();
         	
         	// check for last message
-        	if (inputLine.substring(0, 3).equals("END")) {
+        	if (inputLine.substring(0, constantSrv.finalMSG.length()).equals(constantSrv.finalMSG)) {
         		System.out.println("Detect last upload link message");
-        		gapTimeClt = Double.parseDouble(inputLine.substring(4));
+        		gapTimeClt = Double.parseDouble(inputLine.substring(constantSrv.finalMSG.length()+1));
         		break;
         	}
         	
@@ -183,6 +183,14 @@ public class tcpThread extends Thread {
         System.out.println("Estimated Total upload bandwidth is " + estTotalUpBandWidth + " Mbits/sec.");
         System.out.println("Availabe fraction is " + availableBWFraction);
         System.out.println("Estimated Available upload bandwidth is " + estAvailiableUpBandWidth + " Mbits/sec.");
+        
+        // sending back the bandwidth result until receiving ACK message
+        String ackMessage;
+        do {
+        	// flush back the bandwidth result
+        	out.println(constantSrv.resultMSG + ':' + estAvailiableUpBandWidth);
+        	out.flush();
+        } while((ackMessage = in.readLine()) != null && !ackMessage.equals(constantSrv.ackMSG));
 	}
 	
 	// client side download link test
@@ -244,7 +252,7 @@ public class tcpThread extends Thread {
 		out.println(lastMSG);
 		out.flush();
 		
-		double test = Double.parseDouble(lastMSG.substring(4));
+		double test = Double.parseDouble(lastMSG.substring(constantSrv.finalMSG.length()+1));
 		
 		System.out.println("Server side takes " + test + " ms.");
 	}

@@ -117,7 +117,7 @@ public class tcpSender {
     }
 
     // upload link test
-    private void runUpLinkTask() {
+    private void runUpLinkTask() throws IOException {
 	    // create payload for the packet train
     	StringBuilder payload = new StringBuilder();
     		
@@ -170,14 +170,27 @@ public class tcpSender {
 		diffTime = (afterTime - beforeTime)/java.lang.Math.pow(10.0, 6.0);
 		// diffTime = myTrainLength*myGapSize/java.lang.Math.pow(10.0, 6.0);
 		// diffTime = myTrainLength*constant.pktGapMS;
-		lastMSG = "END:" + diffTime;
+		lastMSG = constant.finalMSG + ':' + diffTime;
 		// send the last message
 		out.println(lastMSG);
 		out.flush();
 		
-		double test = Double.parseDouble(lastMSG.substring(4));
+		double test = Double.parseDouble(lastMSG.substring(constant.resultMSG.length()+1));
 		
 		System.out.println("Client side takes " + test + " ms.");
+		
+		// waiting for the upload link result
+		String uplinkBWResult;
+		while ((uplinkBWResult = in.readLine()) != null) {
+			if (uplinkBWResult.substring(0, constant.resultMSG.length()).equals(constant.resultMSG)) {
+				// extra colon added
+				System.out.println("Uplink Bandwidth result is " + uplinkBWResult.substring(constant.resultMSG.length()+1));
+				// send back the ACK result
+				out.println(constant.ackMSG);
+				out.flush();
+				break;
+			}
+		}
     }
     
     // download link test
@@ -211,9 +224,9 @@ public class tcpSender {
         	byteCounter += inputLine.length();
         	
         	// check for last message
-        	if (inputLine.substring(0, 3).equals("END")) {
+        	if (inputLine.substring(0, constant.finalMSG.length()).equals(constant.finalMSG)) {
         		System.out.println("Detect last download link message");
-        		gapTimeSrv = Double.parseDouble(inputLine.substring(4));
+        		gapTimeSrv = Double.parseDouble(inputLine.substring(constant.finalMSG.length()+1));
         		break;
         	}
         	
