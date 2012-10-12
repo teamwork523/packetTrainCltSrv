@@ -175,7 +175,7 @@ public class tcpSender {
 		out.println(lastMSG);
 		out.flush();
 		
-		double test = Double.parseDouble(lastMSG.substring(constant.resultMSG.length()+1));
+		double test = Double.parseDouble(lastMSG.substring(constant.finalMSG.length()+1));
 		
 		System.out.println("Client side takes " + test + " ms.");
 		
