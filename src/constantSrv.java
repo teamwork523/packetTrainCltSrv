@@ -23,4 +23,5 @@ public class constantSrv {
 	public static final String finalMSG = "END";
 	public static final String ackMSG = "ACK";
 	public static final String resultMSG = "RT";
+	public static final String configMSG = "CONFIG";	// synchronize the client and server parameters
 }

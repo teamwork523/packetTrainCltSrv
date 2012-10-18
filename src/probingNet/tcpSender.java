@@ -95,17 +95,17 @@ public class tcpSender {
     
     // send TCP packet train
     public void runSocket() {
-    	try {
-    		 System.out.println("*****************************************************************");
-		     System.out.println("************************ Uplink BW Test *************************");
-		     System.out.println("*****************************************************************");
+    	try {  		
+    		System.out.println("*****************************************************************");
+		    System.out.println("************************ Uplink BW Test *************************");
+		    System.out.println("*****************************************************************");
 		     
 	    	// upload link bandwidth test
 	    	runUpLinkTask();
 	    	
-	    	 System.out.println("*****************************************************************");
-		     System.out.println("********************** Downlink BW Test *************************");
-		     System.out.println("*****************************************************************");
+	    	System.out.println("*****************************************************************");
+		    System.out.println("********************** Downlink BW Test *************************");
+		    System.out.println("*****************************************************************");
 	    	
 	    	// download link bandwidth test
 	    	runDownLinkTask();
@@ -115,7 +115,7 @@ public class tcpSender {
     		e.printStackTrace();
     	}
     }
-
+    
     // upload link test
     private void runUpLinkTask() throws IOException {
 	    // create payload for the packet train

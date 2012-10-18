@@ -96,6 +96,9 @@ public class tcpThread extends Thread {
 						new InputStreamReader(
 						clientSocket.getInputStream()));
 		        
+		        // Synchronize the client configuration
+		        synClientConfig();
+		        
 		        System.out.println("*****************************************************************");
 		        System.out.println("************************ Uplink BW Test *************************");
 		        System.out.println("*****************************************************************");
@@ -122,6 +125,29 @@ public class tcpThread extends Thread {
 	        }
 		}
     }
+	
+	// Fetch client side parameters and reset those to server side
+	private void synClientConfig() throws IOException {
+		// Format: "CONFIG: gap_size,pkt_size,train_len"
+		String configParaStr = "";
+		while ((configParaStr = in.readLine()) != null) {
+			if (configParaStr.substring(0, constantSrv.configMSG.length()).equals(constantSrv.configMSG)) {
+				// extract the useful information
+				configParaStr = configParaStr.substring(constantSrv.configMSG.length()+1);
+				String[] configParaArray = configParaStr.split(",");
+				
+				myGapSize = (long)(Integer.parseInt(configParaArray[0]));
+				myPktSize = Integer.parseInt(configParaArray[1]);
+				myTrainLength = Integer.parseInt(configParaArray[2]);
+				
+				System.out.println("Success sync parameters with client side");
+				
+				// send back ACK message
+				out.println(constantSrv.ackMSG);
+				out.flush();
+			}
+		}
+	}
 	
 	// client side upload link test
 	private void upLinkBandwidthtest() throws IOException {
