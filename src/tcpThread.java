@@ -32,7 +32,7 @@ public class tcpThread extends Thread {
     tcpThread (double gap, int pkt, int train, int port_number) {
 		if (gap != 0)
 			// convert from ms to ns
-			myGapSize = (long) (gap*java.lang.Math.pow(10.0, 6.0));
+			myGapSize = (long) (gap*Math.pow(10.0, 6.0));
 		else
 			myGapSize = constantSrv.pktGapNS;
 		if (pkt != 0)
@@ -202,12 +202,12 @@ public class tcpThread extends Thread {
         
         //endTime = System.currentTimeMillis();
         endTime = System.nanoTime();
-        gapTimeSrv = (endTime - startTime)/java.lang.Math.pow(10.0, 6.0);
+        gapTimeSrv = (endTime - startTime)/Math.pow(10.0, 6.0);
         
         // Bandwidth calculation
         // 1 Mbit/s = 125 Byte/ms 
         estTotalUpBandWidth = byteCounter/gapTimeSrv/125.0;
-        availableBWFraction = gapTimeClt/gapTimeSrv;
+        availableBWFraction = Math.min(gapTimeClt/gapTimeSrv,1.0);
         estAvailiableUpBandWidth = estTotalUpBandWidth * availableBWFraction;
         
         // Display information at the server side
@@ -274,13 +274,13 @@ public class tcpThread extends Thread {
 		//afterTime = System.currentTimeMillis();
 				
 		System.out.println("Single Packet size is " + payload.length() + " Bytes.");
-		System.out.println("Single GAP is " + myGapSize/java.lang.Math.pow(10.0, 6.0) + " ms.");
+		System.out.println("Single GAP is " + myGapSize/Math.pow(10.0, 6.0) + " ms.");
 		System.out.println("Total number of packet is " + counter);
 		
 		String lastMSG;
 		// Total GAP calculation
-		diffTime = (afterTime - beforeTime)/java.lang.Math.pow(10.0, 6.0);
-		// diffTime = myTrainLength*myGapSize/java.lang.Math.pow(10.0, 6.0);
+		diffTime = (afterTime - beforeTime)/Math.pow(10.0, 6.0);
+		// diffTime = myTrainLength*myGapSize/Math.pow(10.0, 6.0);
 		// diffTime = myTrainLength*constant.pktGapMS;
 		lastMSG = "END:" + diffTime;
 		// send the last message
