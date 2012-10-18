@@ -146,10 +146,14 @@ public class tcpThread extends Thread {
 				myTrainLength = Integer.parseInt(configParaArray[2]);
 				
 				System.out.println("Success sync parameters with client side");
+				System.out.println("gap size is " + myGapSize + "; packet size is " + myPktSize + "; Train length is " + myTrainLength);
 				
 				// send back ACK message
 				out.println(constantSrv.ackMSG);
 				out.flush();
+				
+				// finish synchronize
+				break;
 			}
 		}
 	}
