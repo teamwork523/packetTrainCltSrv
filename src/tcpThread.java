@@ -26,9 +26,10 @@ public class tcpThread extends Thread {
     private long myGapSize = 0;
 	private int myPktSize = 0;
 	private int myTrainLength = 0;
+	private int myPortNum = 0;
     
     // class constructor
-    tcpThread (double gap, int pkt, int train) {
+    tcpThread (double gap, int pkt, int train, int port_number) {
 		if (gap != 0)
 			// convert from ms to ns
 			myGapSize = (long) (gap*java.lang.Math.pow(10.0, 6.0));
@@ -42,12 +43,16 @@ public class tcpThread extends Thread {
 			myTrainLength = train;
 		else
 			myTrainLength = constantSrv.pktTrainLength;
+		if (port_number != 0)
+			myPortNum = port_number;
+		else
+			myPortNum = constantSrv.portNumber;
 	}
     
 	// setup a server Socket
 	public void createServerSocket() {
 		try {
-            serverSocket = new ServerSocket(constantSrv.portNumber);
+            serverSocket = new ServerSocket(myPortNum);
             
             // receive buffer size
             /*System.out.println("Before setting, receive buffer is " + serverSocket.getReceiveBufferSize());
@@ -55,11 +60,11 @@ public class tcpThread extends Thread {
             System.out.println("After setting, receive buffer is " + serverSocket.getReceiveBufferSize());*/
             
         } catch (IOException e) {
-            System.err.println("Could not listen on port: " + constantSrv.portNumber + ".");
+            System.err.println("Could not listen on port: " + myPortNum + ".");
             System.exit(1);
         }
         
-        System.out.println("Start listen on port: " + constantSrv.portNumber + ".");
+        System.out.println("Start listen on port: " + myPortNum + ".");
 	}
 	
 	// close all the socket and stream
