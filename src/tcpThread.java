@@ -207,8 +207,9 @@ public class tcpThread extends Thread {
         // Bandwidth calculation
         // 1 Mbit/s = 125 Byte/ms 
         estTotalUpBandWidth = byteCounter/gapTimeSrv/125.0;
-        availableBWFraction = gapTimeClt/gapTimeSrv;
-        estAvailiableUpBandWidth = estTotalUpBandWidth * availableBWFraction;
+        availableBWFraction = Math.min(gapTimeSrv/gapTimeClt,1.0);
+        // calculate the IP layer capacity
+        estAvailiableUpBandWidth = estTotalUpBandWidth / availableBWFraction;
         
         // Display information at the server side
         System.out.println("Receive single Pkt size is " + singlePktSize + " Bytes.");
@@ -292,13 +293,3 @@ public class tcpThread extends Thread {
 		System.out.println("Server side takes " + test + " ms.");
 	}
 }
-
-
-
-
-
-
-
-
-
-
