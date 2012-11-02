@@ -208,7 +208,7 @@ public class tcpThread extends Thread {
         // 1 Mbit/s = 125 Byte/ms 
         estTotalUpBandWidth = byteCounter/gapTimeSrv/125.0;
         availableBWFraction = Math.min(gapTimeClt/gapTimeSrv,1.0);
-        estAvailiableUpBandWidth = estTotalUpBandWidth * availableBWFraction;
+        estAvailiableUpBandWidth = estTotalUpBandWidth / availableBWFraction;
         
         // Display information at the server side
         System.out.println("Receive single Pkt size is " + singlePktSize + " Bytes.");
