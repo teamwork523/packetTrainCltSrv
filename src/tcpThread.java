@@ -56,7 +56,7 @@ public class tcpThread extends Thread {
             
             // receive buffer size
             // System.out.println("Before setting, receive buffer is " + serverSocket.getReceiveBufferSize());
-            serverSocket.setReceiveBufferSize(1500);
+            // serverSocket.setReceiveBufferSize(724);
             // System.out.println("After setting, receive buffer is " + serverSocket.getReceiveBufferSize());
             
         } catch (IOException e) {
@@ -147,6 +147,9 @@ public class tcpThread extends Thread {
 				
 				System.out.println("Success sync parameters with client side");
 				System.out.println("gap size is " + myGapSize + "; packet size is " + myPktSize + "; Train length is " + myTrainLength);
+				
+				// reset server side buffer size
+				serverSocket.setReceiveBufferSize(myPktSize);
 				
 				// send back ACK message
 				out.println(constantSrv.ackMSG);
