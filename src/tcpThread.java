@@ -55,9 +55,9 @@ public class tcpThread extends Thread {
             serverSocket = new ServerSocket(myPortNum);
             
             // receive buffer size
-            /*System.out.println("Before setting, receive buffer is " + serverSocket.getReceiveBufferSize());
-            serverSocket.setReceiveBufferSize(10);
-            System.out.println("After setting, receive buffer is " + serverSocket.getReceiveBufferSize());*/
+            // System.out.println("Before setting, receive buffer is " + serverSocket.getReceiveBufferSize());
+            serverSocket.setReceiveBufferSize(1500);
+            // System.out.println("After setting, receive buffer is " + serverSocket.getReceiveBufferSize());
             
         } catch (IOException e) {
             System.err.println("Could not listen on port: " + myPortNum + ".");
