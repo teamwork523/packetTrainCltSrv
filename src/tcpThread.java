@@ -203,6 +203,7 @@ public class tcpThread extends Thread {
         /*byte[] buffer = new byte[myPktSize];
         int size;
         size = in.read(buffer);*/
+        clientSocket = serverSocket.accept();
         inCtrl = new BufferedReader(new InputStreamReader(
         		clientSocket.getInputStream()));
         while ((inputLine = inCtrl.readLine()) != null) {
