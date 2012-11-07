@@ -5,13 +5,12 @@
  * 
  */
 
-// import java.lang.Long;
-// import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-// import java.io.InputStreamReader;
-// import java.io.PrintWriter;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.BufferedReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.locks.LockSupport;
@@ -24,6 +23,8 @@ public class tcpThread extends Thread {
     // socket stream
     private DataOutputStream out = null;
     private DataInputStream in = null;
+    private PrintWriter outCtrl = null;
+    private BufferedReader inCtrl = null;
     // downlink bandwidth test variable
     private long myGapSize = 0;
 	private int myPktSize = 0;
@@ -100,7 +101,10 @@ public class tcpThread extends Thread {
 	        try {
 		        out = new DataOutputStream(clientSocket.getOutputStream());
 		        in = new DataInputStream(clientSocket.getInputStream());
-		        
+		        // control stream
+		        outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
+	            inCtrl = new BufferedReader(new InputStreamReader(
+	            		clientSocket.getInputStream()));
 		        // Synchronize the client configuration
 		        synClientConfig();
 		        
@@ -122,6 +126,8 @@ public class tcpThread extends Thread {
 		        clientSocket.close();
 		        out.close();
 		        in.close();
+		        inCtrl.close();
+		        outCtrl.close();
 	        
 	        } catch (IOException e) {
 	        	e.printStackTrace();
@@ -135,12 +141,12 @@ public class tcpThread extends Thread {
 	private void synClientConfig() throws IOException {
 		// Format: "CONFIG: gap_size,pkt_size,train_len"
 		String configParaStr = "";
-		int size;
+		/*int size;
 		byte[] buffer = new byte[200];
-		size = in.read(buffer);
-		while (size > 0) {
-			configParaStr = new String(buffer).trim();
-			buffer = new byte[200];
+		size = in.read(buffer);*/
+		while ((configParaStr = inCtrl.readLine()) != null) {
+			/*configParaStr = new String(buffer).trim();
+			buffer = new byte[200];*/
 			
 			if (configParaStr.substring(0, constantSrv.configMSG.length()).equals(constantSrv.configMSG)) {
 				// extract the useful information
@@ -158,13 +164,15 @@ public class tcpThread extends Thread {
 				serverSocket.setReceiveBufferSize(myPktSize);
 				
 				// send back ACK message
-				out.write(constantSrv.ackMSG.getBytes());
-				out.flush();
+				/*out.write(constantSrv.ackMSG.getBytes());
+				out.flush();*/
+				outCtrl.println(constantSrv.ackMSG);
+				outCtrl.flush();
 				
 				// finish synchronize
 				break;
 			}
-			size = in.read(buffer);
+			// size = in.read(buffer);
 		}
 	}
 	
@@ -187,19 +195,18 @@ public class tcpThread extends Thread {
         double availableBWFraction = 1.0;
         
         // output from what received
-        byte[] buffer = new byte[myPktSize];
+        /*byte[] buffer = new byte[myPktSize];
         int size;
-        size = in.read(buffer);
-        while (size > 0) {
-        	System.out.println("Received "+ counter +" buffer: ");
+        size = in.read(buffer);*/
+        while ((inputLine = inCtrl.readLine()) != null) {
+        	/*System.out.println("Received "+ counter +" buffer: ");
         	for (int i = 0; i < buffer.length; i++) {
         		System.out.print((char)(buffer[i]));
         	}
         	System.out.print("\n");
         	inputLine = new String(buffer).trim();
+        	buffer = new byte[myPktSize];*/
         	System.out.println("Received the "+ counter +" message: " + inputLine);
-        	
-        	buffer = new byte[myPktSize];
         	
         	// check if the start time recorded for first received packet
         	if (startTime == 0) {
@@ -221,7 +228,7 @@ public class tcpThread extends Thread {
         	// increase the counter
         	counter++;
 
-        	size = in.read(buffer);
+        	//size = in.read(buffer);
         }
         
         
@@ -248,13 +255,13 @@ public class tcpThread extends Thread {
         String ackMessage;
         // byte[] ackBuffer = new byte[200];
         do {
-        	byte[] ackBuffer = new byte[200];
+        	//byte[] ackBuffer = new byte[200];
         	// flush back the bandwidth result
-        	out.write((constantSrv.resultMSG + ':' + estAvailiableUpBandWidth).getBytes());
-        	out.flush();
-        	size = in.read(ackBuffer);
-        	ackMessage = new String(ackBuffer).trim();
-        } while(size > 0 && !ackMessage.equals(constantSrv.ackMSG));
+        	outCtrl.println((constantSrv.resultMSG + ':' + estAvailiableUpBandWidth).getBytes());
+        	outCtrl.flush();
+        	/*size = in.read(ackBuffer);
+        	ackMessage = new String(ackBuffer).trim();*/
+        } while((ackMessage = inCtrl.readLine()) != null && !ackMessage.equals(constantSrv.ackMSG));
 	}
 	
 	// client side download link test
@@ -316,8 +323,8 @@ public class tcpThread extends Thread {
 		// diffTime = myTrainLength*constant.pktGapMS;
 		lastMSG = "END:" + diffTime;
 		// send the last message
-		out.write(lastMSG.getBytes());
-		out.flush();
+		outCtrl.println(lastMSG.getBytes());
+		outCtrl.flush();
 		
 		double test = Double.parseDouble(lastMSG.substring(constantSrv.finalMSG.length()+1));
 		
