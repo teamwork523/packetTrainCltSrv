@@ -257,7 +257,7 @@ public class tcpThread extends Thread {
         do {
         	//byte[] ackBuffer = new byte[200];
         	// flush back the bandwidth result
-        	outCtrl.println((constantSrv.resultMSG + ':' + estAvailiableUpBandWidth).getBytes());
+        	outCtrl.println(constantSrv.resultMSG + ':' + estAvailiableUpBandWidth);
         	outCtrl.flush();
         	/*size = in.read(ackBuffer);
         	ackMessage = new String(ackBuffer).trim();*/
@@ -329,7 +329,7 @@ public class tcpThread extends Thread {
 		// diffTime = myTrainLength*constant.pktGapMS;
 		lastMSG = "END:" + diffTime;
 		// send the last message
-		outCtrl.println(lastMSG.getBytes());
+		outCtrl.println(lastMSG);
 		outCtrl.flush();
 		
 		double test = Double.parseDouble(lastMSG.substring(constantSrv.finalMSG.length()+1));
