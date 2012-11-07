@@ -5,7 +5,7 @@
  * 
  */
 
-import java.io.DataInputStream;
+//import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -22,7 +22,7 @@ public class tcpThread extends Thread {
     private Socket clientSocket = null;
     // socket stream
     private DataOutputStream out = null;
-    private DataInputStream in = null;
+    // private DataInputStream in = null;
     private PrintWriter outCtrl = null;
     private BufferedReader inCtrl = null;
     // downlink bandwidth test variable
@@ -99,12 +99,12 @@ public class tcpThread extends Thread {
 	        System.out.println("*****************************************************************");
 	        
 	        try {
-		        out = new DataOutputStream(clientSocket.getOutputStream());
+		        /*out = new DataOutputStream(clientSocket.getOutputStream());
 		        in = new DataInputStream(clientSocket.getInputStream());
 		        // control stream
 		        outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
 	            inCtrl = new BufferedReader(new InputStreamReader(
-	            		clientSocket.getInputStream()));
+	            		clientSocket.getInputStream()));*/
 		        // Synchronize the client configuration
 		        synClientConfig();
 		        
@@ -124,10 +124,10 @@ public class tcpThread extends Thread {
 		        
 		        // close the current client socket
 		        clientSocket.close();
-		        out.close();
+		        /*out.close();
 		        in.close();
 		        inCtrl.close();
-		        outCtrl.close();
+		        outCtrl.close();*/
 	        
 	        } catch (IOException e) {
 	        	e.printStackTrace();
@@ -144,6 +144,9 @@ public class tcpThread extends Thread {
 		/*int size;
 		byte[] buffer = new byte[200];
 		size = in.read(buffer);*/
+		inCtrl = new BufferedReader(new InputStreamReader(
+        		clientSocket.getInputStream()));
+		outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
 		while ((configParaStr = inCtrl.readLine()) != null) {
 			/*configParaStr = new String(buffer).trim();
 			buffer = new byte[200];*/
@@ -174,6 +177,8 @@ public class tcpThread extends Thread {
 			}
 			// size = in.read(buffer);
 		}
+		inCtrl.close();
+		outCtrl.close();
 	}
 	
 	// client side upload link test
@@ -198,6 +203,8 @@ public class tcpThread extends Thread {
         /*byte[] buffer = new byte[myPktSize];
         int size;
         size = in.read(buffer);*/
+        inCtrl = new BufferedReader(new InputStreamReader(
+        		clientSocket.getInputStream()));
         while ((inputLine = inCtrl.readLine()) != null) {
         	/*System.out.println("Received "+ counter +" buffer: ");
         	for (int i = 0; i < buffer.length; i++) {
@@ -230,7 +237,7 @@ public class tcpThread extends Thread {
 
         	//size = in.read(buffer);
         }
-        
+        inCtrl.close();
         
         //endTime = System.currentTimeMillis();
         endTime = System.nanoTime();
@@ -254,6 +261,11 @@ public class tcpThread extends Thread {
         // sending back the bandwidth result until receiving ACK message
         String ackMessage;
         // byte[] ackBuffer = new byte[200];
+        
+        inCtrl = new BufferedReader(new InputStreamReader(
+        		clientSocket.getInputStream()));
+		outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
+		
         do {
         	//byte[] ackBuffer = new byte[200];
         	// flush back the bandwidth result
@@ -262,6 +274,8 @@ public class tcpThread extends Thread {
         	/*size = in.read(ackBuffer);
         	ackMessage = new String(ackBuffer).trim();*/
         } while((ackMessage = inCtrl.readLine()) != null && !ackMessage.equals(constantSrv.ackMSG));
+        inCtrl.close();
+        outCtrl.close();
 	}
 	
 	// client side download link test
@@ -293,6 +307,8 @@ public class tcpThread extends Thread {
     	long afterTime = 0;
     	double diffTime = 0;
     	
+    	out = new DataOutputStream(clientSocket.getOutputStream());
+    	
 		while (counter < myTrainLength) {
 			// start recording the first packet send time
 			if (beforeTime == 0) {
@@ -314,6 +330,8 @@ public class tcpThread extends Thread {
 			counter++;
 		}
 		
+		out.close();
+		
 		// record finish transmission time
 		afterTime = System.nanoTime();
 		//afterTime = System.currentTimeMillis();
@@ -328,9 +346,13 @@ public class tcpThread extends Thread {
 		// diffTime = myTrainLength*myGapSize/Math.pow(10.0, 6.0);
 		// diffTime = myTrainLength*constant.pktGapMS;
 		lastMSG = "END:" + diffTime;
+		
+		outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
+		
 		// send the last message
 		outCtrl.println(lastMSG);
 		outCtrl.flush();
+		outCtrl.close();
 		
 		double test = Double.parseDouble(lastMSG.substring(constantSrv.finalMSG.length()+1));
 		
