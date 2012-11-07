@@ -277,7 +277,13 @@ public class tcpThread extends Thread {
     		
     	// assign special characters
     	payload[0] = 's';
-    	payload[myPktSize-1] = 'e';
+    	// inject "e\n" into payload
+    	String endStr = "e\n";
+    	byte[] endStrbyte = endStr.getBytes();
+    	System.out.println("End byte is " + endStrbyte.toString() + "; With length " + endStrbyte.length);
+    	for (int i = 0; i < endStrbyte.length; i++) {
+    		payload[myPktSize - endStrbyte.length + i] = endStrbyte[i];
+    	}
 	
     	System.out.println("Current payload is " + new String(payload));
     	
