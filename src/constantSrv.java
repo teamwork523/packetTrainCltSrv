@@ -16,8 +16,8 @@ public class constantSrv {
 	public static final int pktSize = 50*1024;
 	
 	// the gap of the size (in ns = 10^(-9)s)
-	public static final double msParameter = 0.5;
-	public static final long pktGapNS = (long)(msParameter*java.lang.Math.pow(10.0, 6.0));
+	public static final double msParameter = 300;
+	public static final long pktGapNS = (long)(msParameter);
 	
 	// special tag for message
 	public static final String finalMSG = "END";

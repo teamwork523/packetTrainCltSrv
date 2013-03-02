@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.io.BufferedReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Random;
 import java.util.concurrent.locks.LockSupport;
 
 public class tcpThread extends Thread {
@@ -35,7 +36,7 @@ public class tcpThread extends Thread {
     tcpThread (double gap, int pkt, int train, int port_number) {
 		if (gap != 0)
 			// convert from ms to ns
-			myGapSize = (long) (gap*Math.pow(10.0, 6.0));
+			myGapSize = (long)(gap);
 		else
 			myGapSize = constantSrv.pktGapNS;
 		if (pkt != 0)
@@ -90,7 +91,7 @@ public class tcpThread extends Thread {
 	            clientSocket.setTcpNoDelay(true);
 	            
 	        } catch (IOException e) {
-	            System.err.println("Accept failed.");
+	            System.err.println("No client socket binded");
 	            System.exit(1);
 	        }
 	        
@@ -100,11 +101,11 @@ public class tcpThread extends Thread {
 	        
 	        try {
 		        /*out = new DataOutputStream(clientSocket.getOutputStream());
-		        in = new DataInputStream(clientSocket.getInputStream());
+		        in = new DataInputStream(clientSocket.getInputStream());*/
 		        // control stream
 		        outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
 	            inCtrl = new BufferedReader(new InputStreamReader(
-	            		clientSocket.getInputStream()));*/
+	            		clientSocket.getInputStream()));
 		        // Synchronize the client configuration
 		        synClientConfig();
 		        
@@ -125,16 +126,16 @@ public class tcpThread extends Thread {
 		        // close the current client socket
 		        clientSocket.close();
 		        /*out.close();
-		        in.close();
+		        in.close();*/
 		        inCtrl.close();
-		        outCtrl.close();*/
+		        outCtrl.close();
 	        
 	        } catch (IOException e) {
 	        	e.printStackTrace();
 	        	// close the server socket
 	        	closeServerSocket();
 	        }
-		}
+			}
     }
 	
 	// Fetch client side parameters and reset those to server side
@@ -144,9 +145,6 @@ public class tcpThread extends Thread {
 		/*int size;
 		byte[] buffer = new byte[200];
 		size = in.read(buffer);*/
-		inCtrl = new BufferedReader(new InputStreamReader(
-        		clientSocket.getInputStream()));
-		outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
 		while ((configParaStr = inCtrl.readLine()) != null) {
 			/*configParaStr = new String(buffer).trim();
 			buffer = new byte[200];*/
@@ -168,17 +166,19 @@ public class tcpThread extends Thread {
 				
 				// send back ACK message
 				/*out.write(constantSrv.ackMSG.getBytes());
-				out.flush();*/
+				out.flush();
 				outCtrl.println(constantSrv.ackMSG);
-				outCtrl.flush();
+				outCtrl.flush();*/
 				
 				// finish synchronize
 				break;
+			} else {
+				System.out.println("Waiting for paramter sync ...");
 			}
 			// size = in.read(buffer);
 		}
-		inCtrl.close();
-		outCtrl.close();
+		//inCtrl.close();
+		//outCtrl.close();
 	}
 	
 	// client side upload link test
@@ -203,9 +203,6 @@ public class tcpThread extends Thread {
         /*byte[] buffer = new byte[myPktSize];
         int size;
         size = in.read(buffer);*/
-        clientSocket = serverSocket.accept();
-        inCtrl = new BufferedReader(new InputStreamReader(
-        		clientSocket.getInputStream()));
         while ((inputLine = inCtrl.readLine()) != null) {
         	/*System.out.println("Received "+ counter +" buffer: ");
         	for (int i = 0; i < buffer.length; i++) {
@@ -214,12 +211,12 @@ public class tcpThread extends Thread {
         	System.out.print("\n");
         	inputLine = new String(buffer).trim();
         	buffer = new byte[myPktSize];*/
-        	System.out.println("Received the "+ counter +" message: " + inputLine);
+        	System.out.println("Received the "+ counter +" message with size: " + inputLine.length());
         	
         	// check if the start time recorded for first received packet
         	if (startTime == 0) {
-        		//startTime = System.currentTimeMillis();
-        		startTime = System.nanoTime();
+        		startTime = System.currentTimeMillis();
+        		//startTime = System.nanoTime();
         		singlePktSize = inputLine.length();
         	}
 
@@ -238,11 +235,11 @@ public class tcpThread extends Thread {
 
         	//size = in.read(buffer);
         }
-        inCtrl.close();
+        // inCtrl.close();
         
-        //endTime = System.currentTimeMillis();
-        endTime = System.nanoTime();
-        gapTimeSrv = (endTime - startTime)/Math.pow(10.0, 6.0);
+        endTime = System.currentTimeMillis();
+        //endTime = System.nanoTime();
+        gapTimeSrv = endTime - startTime;
         
         // Bandwidth calculation
         // 1 Mbit/s = 125 Byte/ms 
@@ -260,23 +257,19 @@ public class tcpThread extends Thread {
         System.out.println("Estimated Available upload bandwidth is " + estAvailiableUpBandWidth + " Mbits/sec.");
         
         // sending back the bandwidth result until receiving ACK message
-        String ackMessage;
+        // String ackMessage;
         // byte[] ackBuffer = new byte[200];
-        
-        inCtrl = new BufferedReader(new InputStreamReader(
-        		clientSocket.getInputStream()));
-		outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
 		
-        do {
+        //do {
         	//byte[] ackBuffer = new byte[200];
         	// flush back the bandwidth result
         	outCtrl.println(constantSrv.resultMSG + ':' + estAvailiableUpBandWidth);
         	outCtrl.flush();
         	/*size = in.read(ackBuffer);
         	ackMessage = new String(ackBuffer).trim();*/
-        } while((ackMessage = inCtrl.readLine()) != null && !ackMessage.equals(constantSrv.ackMSG));
-        inCtrl.close();
-        outCtrl.close();
+        //} while((ackMessage = inCtrl.readLine()) != null && !ackMessage.equals(constantSrv.ackMSG));
+        //inCtrl.close();
+        //outCtrl.close();
 	}
 	
 	// client side download link test
@@ -284,23 +277,21 @@ public class tcpThread extends Thread {
 		// create payload for the packet train
     	// StringBuilder payload = new StringBuilder();
 		byte[] payload = new byte[myPktSize];
-    		
-    	// Create a zero string
-    	for (int i = 0; i < myPktSize; i++) {
-    		payload[i] = '0';
-    	}
+			Random rand = new Random();
+	  	// Create a zero string
+	  	for (int i = 0; i < myPktSize; i++) {
+	  		payload[i] = (byte)('A' + rand.nextInt(26));
+	  	}
     		
     	// assign special characters
-    	payload[0] = 's';
+    	payload[0] = '0';
     	// inject "e\n" into payload
-    	String endStr = "e\n";
+    	String endStr = "1";
     	byte[] endStrbyte = endStr.getBytes();
-    	System.out.println("End byte is " + endStrbyte.toString() + "; With length " + endStrbyte.length);
+    	// System.out.println("End byte is " + endStrbyte.toString() + "; With length " + endStrbyte.length);
     	for (int i = 0; i < endStrbyte.length; i++) {
     		payload[myPktSize - endStrbyte.length + i] = endStrbyte[i];
     	}
-	
-    	System.out.println("Current payload is " + new String(payload));
     	
 	    // create a counter for packet train
     	int counter = 0;
@@ -308,55 +299,49 @@ public class tcpThread extends Thread {
     	long afterTime = 0;
     	double diffTime = 0;
     	
-    	out = new DataOutputStream(clientSocket.getOutputStream());
-    	
+    String realPayload = new String(payload); 
 		while (counter < myTrainLength) {
 			// start recording the first packet send time
 			if (beforeTime == 0) {
-				beforeTime = System.nanoTime();
-				//beforeTime = System.currentTimeMillis();
+				// beforeTime = System.nanoTime();
+				beforeTime = System.currentTimeMillis();
 			}
 			
 			// send packet with constant gap
-			out.write(payload);
-			out.flush();
-			
+			outCtrl.println(realPayload);
+			outCtrl.flush();
+			System.out.println("Send " + (counter + 1) + "th message with size: " + realPayload.length());
 			// create train gap in nanoseconds
-			/*try {
-				Thread.sleep(constant.pktGapMS);
+			try {
+				Thread.sleep(myGapSize);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}*/
-			LockSupport.parkNanos(myGapSize);		
+			}
+			//LockSupport.parkNanos(myGapSize);		
 			counter++;
 		}
 		
-		out.close();
 		
 		// record finish transmission time
-		afterTime = System.nanoTime();
-		//afterTime = System.currentTimeMillis();
+		// afterTime = System.nanoTime();
+		afterTime = System.currentTimeMillis();
 				
 		System.out.println("Single Packet size is " + payload.length + " Bytes.");
-		System.out.println("Single GAP is " + myGapSize/Math.pow(10.0, 6.0) + " ms.");
+		System.out.println("Single GAP is " + myGapSize + " ms.");
 		System.out.println("Total number of packet is " + counter);
 		
 		String lastMSG;
 		// Total GAP calculation
-		diffTime = (afterTime - beforeTime)/Math.pow(10.0, 6.0);
+		diffTime = afterTime - beforeTime;
 		// diffTime = myTrainLength*myGapSize/Math.pow(10.0, 6.0);
 		// diffTime = myTrainLength*constant.pktGapMS;
 		lastMSG = "END:" + diffTime;
 		
-		outCtrl = new PrintWriter(clientSocket.getOutputStream(), true);
-		
 		// send the last message
 		outCtrl.println(lastMSG);
 		outCtrl.flush();
-		outCtrl.close();
+		// outCtrl.close();
 		
-		double test = Double.parseDouble(lastMSG.substring(constantSrv.finalMSG.length()+1));
-		
-		System.out.println("Server side takes " + test + " ms.");
+		System.out.println("Server side takes " + diffTime + " ms.");
 	}
 }
