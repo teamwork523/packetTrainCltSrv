@@ -31,6 +31,7 @@ public class tcpThread extends Thread {
 	private int myPktSize = 0;
 	private int myTrainLength = 0;
 	private int myPortNum = 0;
+	private String myDir = "Up";
     
     // class constructor
     tcpThread (double gap, int pkt, int train, int port_number) {
@@ -109,19 +110,22 @@ public class tcpThread extends Thread {
 		        // Synchronize the client configuration
 		        synClientConfig();
 		        
-		        System.out.println("*****************************************************************");
-		        System.out.println("************************ Uplink BW Test *************************");
-		        System.out.println("*****************************************************************");
+		        if (myDir == "Up") {
+			        System.out.println("*****************************************************************");
+			        System.out.println("************************ Uplink BW Test *************************");
+			        System.out.println("*****************************************************************");
+			        
+			        // uplink test
+			        upLinkBandwidthtest();
+		        } else {
 		        
-		        // uplink test
-		        upLinkBandwidthtest();
-		        
-		        System.out.println("*****************************************************************");
-		        System.out.println("********************** Downlink BW Test *************************");
-		        System.out.println("*****************************************************************");
-		        
-		        // downlink test
-		        downLinkBandwidthtest();
+			        System.out.println("*****************************************************************");
+			        System.out.println("********************** Downlink BW Test *************************");
+			        System.out.println("*****************************************************************");
+			        
+			        // downlink test
+			        downLinkBandwidthtest();
+		        }
 		        
 		        // close the current client socket
 		        clientSocket.close();
@@ -157,9 +161,10 @@ public class tcpThread extends Thread {
 				myGapSize = (long)(Integer.parseInt(configParaArray[0]));
 				myPktSize = Integer.parseInt(configParaArray[1]);
 				myTrainLength = Integer.parseInt(configParaArray[2]);
-				
+				myDir = configParaArray[3];
 				System.out.println("Success sync parameters with client side");
-				System.out.println("gap size is " + myGapSize + "; packet size is " + myPktSize + "; Train length is " + myTrainLength);
+				System.out.println("gap size is " + myGapSize + "; packet size is " + myPktSize + 
+													 " Direction is " + myDir + "; Train length is " + myTrainLength);
 				
 				// reset server side buffer size
 				serverSocket.setReceiveBufferSize(myPktSize);
@@ -211,7 +216,6 @@ public class tcpThread extends Thread {
         	System.out.print("\n");
         	inputLine = new String(buffer).trim();
         	buffer = new byte[myPktSize];*/
-        	System.out.println("Received the "+ counter +" message with size: " + inputLine.length());
         	
         	// check if the start time recorded for first received packet
         	if (startTime == 0) {
@@ -230,6 +234,7 @@ public class tcpThread extends Thread {
         		break;
         	}
         	
+        	System.out.println("Received the "+ (counter + 1) +" message with size: " + inputLine.length());
         	// increase the counter
         	counter++;
 
